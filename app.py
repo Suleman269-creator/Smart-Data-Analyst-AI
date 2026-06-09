@@ -1,4 +1,6 @@
 import streamlit as st
+import os
+from PIL import Image
 from modules.loader import load_file
 from modules.cleaner import clean_dataset
 from modules.analyzer import generate_kpis
@@ -7,9 +9,10 @@ from modules.ai_engine import get_insights
 from modules.chatbot import chat_with_data
 from modules.predictor import run_prediction
 
-# 1. Page Configuration
+# 1. Premium Page Configuration
 st.set_page_config(
-    page_title="Customer AI Data Analyst", 
+    page_title="QuikBI Analyst - Intelligent Business Intelligence Portal", 
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -35,9 +38,9 @@ st.markdown("""
             box-shadow: 0 8px 32px 0 rgba(147, 51, 234, 0.05);
         }
         .hero-title {
-            font-size: 42px;
+            font-size: 46px;
             font-weight: 800;
-            background: linear-gradient(90deg, #d8b4fe 0%, #a855f7 50%, #ec4899 100%);
+            background: linear-gradient(90deg, #ffffff 0%, #a855f7 55%, #ec4899 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0px;
@@ -46,7 +49,7 @@ st.markdown("""
         .hero-caption {
             font-size: 16px;
             color: #94a3b8;
-            margin-top: 8px;
+            margin-top: 12px;
             font-weight: 400;
         }
 
@@ -127,13 +130,35 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Centralized Hero Title Section (FIXED: Stripped background-clip to prevent transparency bugs)
-st.markdown("""
-    <div class="hero-container" style="text-align: center; padding: 2.5rem 1rem 1.5rem 1rem; background: linear-gradient(135deg, rgba(31,18,54,0.6) 0%, rgba(15,10,28,0.6) 100%); border-radius: 16px; border: 1px solid rgba(147, 51, 234, 0.2); margin-bottom: 2.5rem; box-shadow: 0 8px 32px 0 rgba(147, 51, 234, 0.05);">
-        <h1 style="color: #ffffff !important; font-family: 'Inter', sans-serif !important; font-size: 42px !important; font-weight: 800 !important; margin: 0px !important; letter-spacing: -0.5px !important; text-shadow: 0px 0px 15px rgba(168, 85, 247, 0.65);">     Customer AI Data Analyst Assistant</h1>
-        <p style="color: #94a3b8 !important; font-family: 'Inter', sans-serif !important; font-size: 16px !important; margin-top: 12px !important; margin-bottom: 0px !important; font-weight: 400 !important;">⚡ Premium Business Intelligence Platform with Groq AI & Predictive Inference Models</p>
-    </div>
-""", unsafe_allow_html=True)
+# 3. Dynamic Side-by-Side Logo and Title Alignment
+if os.path.exists("logo.png"):
+    logo_img = Image.open("logo.png")
+    col_logo, col_title = st.columns([1, 4])
+    
+    with col_logo:
+        st.image(logo_img, use_container_width=True)
+        
+    with col_title:
+        st.markdown("""
+            <div style="padding-top: 15px;">
+                <h1 style="color: #ffffff !important; font-family: 'Inter', sans-serif !important; font-size: 54px !important; font-weight: 800 !important; margin: 0px !important; letter-spacing: -1px !important;">
+                    Quik<span style="color: #a855f7;">BI</span> Analyst
+                </h1>
+                <p style="color: #94a3b8 !important; font-family: 'Inter', sans-serif !important; font-size: 16px !important; margin-top: 5px !important; font-weight: 400;">
+                    ⚡ Premium Business Intelligence Platform with Groq AI & Predictive Inference Models
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+else:
+    # Text Fallback Header if image is missing
+    st.markdown("""
+        <div class="hero-container">
+            <h1 class="hero-title">QuikBI Analyst</h1>
+            <p class="hero-caption">⚡ Premium Business Intelligence Platform with Groq AI & Predictive Inference Models</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<hr style='margin-top: 10px; margin-bottom: 30px;'>", unsafe_allow_html=True)
 
 # 4. File Upload Area
 file = st.file_uploader("Upload Customer Sales Dataset (CSV or XLSX)", type=["csv", "xlsx"])
@@ -170,7 +195,7 @@ if file:
     st.markdown('<p class="section-header">💡 Automated Executive AI Insights</p>', unsafe_allow_html=True)
     with st.container():
         if st.button("Run AI Insights Diagnostics"):
-            with st.spinner("Streaming context vectors to Groq Cloud..."):
+            with st.spinner("Streaming context vectors to QuikBI Engine..."):
                 result = get_insights(df)
                 st.write(result)
 

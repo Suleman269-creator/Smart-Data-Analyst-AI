@@ -3,9 +3,15 @@ import numpy as np
 import re
 
 def clean_dataset(df):
+    """
+    Executes an aggressive data cleansing pipeline. Normalizes headers, handles
+    unaligned datetime sequences, eliminates categorical 'None' ambiguity, and 
+    forces mixed string/numeric data blocks into clean float vectors.
+    """
     if df is None or df.empty:
         return df
 
+    # Create an isolated deep copy to prevent mutating underlying memory spaces
     df_clean = df.copy()
 
     # 1. FORCE DROP: Instantly remove trailing unnamed ghost delimiter tracks
@@ -13,24 +19,35 @@ def clean_dataset(df):
     if unnamed_cols:
         df_clean = df_clean.drop(columns=unnamed_cols)
 
-    # 2. Standardize Column Headers (Lowercase, Trimmed, Snake Case Layout)
+    # 2. STANDARDIZE HEADERS: Convert to lowercase, trimmed, snake_case format layout
     df_clean.columns = df_clean.columns.astype(str).str.strip().str.lower().str.replace(' ', '_')
 
-    # 3. Clean Category / Product String Structural Attributes
+    # 3. FIXED CATEGORICAL CLEANING: Replace ambiguous 'None/Null' strings with a clean label
     cat_col = next((c for c in df_clean.columns if 'category' in c or 'product' in c), None)
     if cat_col:
-        df_clean[cat_col] = df_clean[cat_col].astype(str).str.strip().str.title()
-        df_clean = df_clean[~df_clean[cat_col].isin(['Nan', 'None', '', 'Null'])]
+        # Force column data types to string and strip flanking blank spaces
+        df_clean[cat_col] = df_clean[cat_col].astype(str).str.strip()
+        
+        # Create a boolean filter mask to identify variations of empty or missing fields
+        null_mask = df_clean[cat_col].str.lower().isin(['nan', 'none', '', 'null', 'default'])
+        
+        # Safely impute those specific positions with a professional fallback category name
+        df_clean.loc[null_mask, cat_col] = "Uncategorized"
+        
+        # Apply standard Title Casing format (e.g., "Home Appliances", "Uncategorized")
+        df_clean[cat_col] = df_clean[cat_col].str.title()
 
-    # 4. Standardize and Align Order Timeline Datetime Attributes
+    # 4. DATETIME ALIGNMENT: Standardize and align timeline attributes safely
     date_col = next((c for c in df_clean.columns if 'date' in c or 'time' in c), None)
     if date_col:
         df_clean[date_col] = pd.to_datetime(df_clean[date_col], errors='coerce')
 
-    # 5. FIXED: Aggressive mixed-type numeric column cleaner loop
+    # 5. FIXED REGEX PARSER: Processes mixed string formats and raw integers smoothly
     for col in df_clean.columns:
-        if any(k in str(col).lower() for k in ['revenue', 'profit', 'cost', 'sales', 'amount']):
-            # Step A: Force every single cell in the series to a clean string format first
+        # Evaluate target operational financial metrics columns
+        if any(keyword in str(col).lower() for keyword in ['revenue', 'profit', 'cost', 'sales', 'amount']):
+            
+            # Step A: Force every single cell in the series to a clean string layout first
             s = df_clean[col].astype(str).str.strip().str.lower()
             
             # Step B: Strip out dollar signs, commas, and currency labels safely
